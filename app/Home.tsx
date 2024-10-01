@@ -2,11 +2,10 @@
 
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
-import { SetStateAction, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   CircularProgress,
-  TextField,
   Container,
   Typography,
   Slider,
@@ -25,25 +24,32 @@ export default function Home() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const messageRef = useRef<HTMLParagraphElement | null>(null);
 
-  const load = async () => {
-    setIsLoading(true);
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
-    const ffmpeg = ffmpegRef.current;
-    ffmpeg.on("log", ({ message }) => {
-      if (messageRef.current) messageRef.current.innerHTML = message;
-    });
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+      const ffmpeg = ffmpegRef.current;
+      ffmpeg.on("log", ({ message }) => {
+        if (messageRef.current) messageRef.current.innerHTML = message;
+      });
 
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.wasm`,
-        "application/wasm"
-      ),
-    });
+      await ffmpeg.load({
+        coreURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.js`,
+          "text/javascript"
+        ),
+        wasmURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.wasm`,
+          "application/wasm"
+        ),
+      });
 
-    setLoaded(true);
-    setIsLoading(false);
-  };
+      setLoaded(true);
+      setIsLoading(false);
+    };
+
+    load();
+  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -171,15 +177,7 @@ export default function Home() {
         minHeight: "100vh",
       }}
     >
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={load}
-        disabled={isLoading}
-        startIcon={isLoading && <CircularProgress size={24} />}
-      >
-        Load FFmpeg
-      </Button>
+      <CircularProgress />
     </Container>
   );
 }
