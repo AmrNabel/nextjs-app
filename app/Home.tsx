@@ -60,7 +60,8 @@ export default function Home() {
   };
 
   const trimVideo = async () => {
-    if (!uploadedFile || startTime === 0 || endTime === 0) {
+    if (!uploadedFile || endTime === 0) {
+      console.log(":  trimVideo  uploadedFile", uploadedFile);
       alert("Please upload a video and specify start and end times.");
       return;
     }
