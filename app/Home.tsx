@@ -9,15 +9,17 @@ import {
   TextField,
   Container,
   Typography,
+  Slider,
 } from "@mui/material";
 
 export default function Home() {
   const [loaded, setLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [startTime, setStartTime] = useState(0);
+  const [endTime, setEndTime] = useState(0);
   const [trimmedVideo, setTrimmedVideo] = useState<string | null>(null);
+  const [videoDuration, setVideoDuration] = useState(0);
 
   const ffmpegRef = useRef(new FFmpeg());
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -48,12 +50,17 @@ export default function Home() {
     if (file) {
       setUploadedFile(file);
       const videoURL = URL.createObjectURL(file);
-      if (videoRef.current) videoRef.current.src = videoURL;
+      if (videoRef.current) {
+        videoRef.current.src = videoURL;
+        videoRef.current.onloadedmetadata = () => {
+          setVideoDuration(videoRef.current?.duration || 0);
+        };
+      }
     }
   };
 
   const trimVideo = async () => {
-    if (!uploadedFile || !startTime || !endTime) {
+    if (!uploadedFile || startTime === 0 || endTime === 0) {
       alert("Please upload a video and specify start and end times.");
       return;
     }
@@ -67,9 +74,9 @@ export default function Home() {
       "-i",
       "input.mp4",
       "-ss",
-      startTime,
+      startTime.toString(),
       "-to",
-      endTime,
+      endTime.toString(),
       "-c",
       "copy",
       "output.mp4",
@@ -93,7 +100,7 @@ export default function Home() {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Video Trimmer
+        made with love by amr nabil
       </Typography>
 
       <video
@@ -111,30 +118,29 @@ export default function Home() {
       />
       <label htmlFor="upload-video">
         <Button variant="contained" component="span" color="primary">
-          Upload Video
+          Upload Your Video
         </Button>
       </label>
 
-      <div style={{ margin: "16px 0" }}>
-        <TextField
-          label="Start Time (e.g., 00:00:10)"
-          variant="outlined"
+      <div style={{ margin: "16px 0", width: "300px" }}>
+        <Slider
           value={startTime}
-          onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            setStartTime(e.target.value)
-          }
-          margin="normal"
-          fullWidth
+          min={0}
+          max={videoDuration}
+          onChange={(_, value) => {
+            setStartTime(value as number);
+            setEndTime(value as number);
+          }}
+          aria-labelledby="start-time-slider"
+          valueLabelDisplay="auto"
         />
-        <TextField
-          label="End Time (e.g., 00:00:20)"
-          variant="outlined"
+        <Slider
           value={endTime}
-          onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            setEndTime(e.target.value)
-          }
-          margin="normal"
-          fullWidth
+          min={startTime}
+          max={videoDuration}
+          onChange={(_, value) => setEndTime(value as number)}
+          aria-labelledby="end-time-slider"
+          valueLabelDisplay="auto"
         />
       </div>
 
